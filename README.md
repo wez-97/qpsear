@@ -5,8 +5,21 @@ qpsear is an R package that automates preprocessing, outlier detection, statisti
 ## Installation
 
 ```r
-# CRAN 버전
+# CRAN version
 install.packages("qpsear")
 
-# 개발 버전 (GitHub)
-remotes::install_github("youruser/qpsear")
+# Development version (GitHub)
+remotes::install_github("wez-97/qpsear")
+```
+
+### Quick Start
+
+# 0. Export rawdata from Quantstudio™ Design & Anaylsis Software 
+# If you do not use Applied Systems qpcr instrument, skip this step.
+![alt text](image.png)
+
+# 0. Prepare matrix for qpsear anaylsis 
+# Generate the rawdata matrix and name that sheet as "rawdata"
+# **Warning:** Column names must match exactly as shown, including capitalization and spaces.
+![alt text](image-1.png)
+![alt text](image-2.png)
