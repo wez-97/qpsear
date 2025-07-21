@@ -1,15 +1,15 @@
-# About qpsear
+# About quickpcr
 
-qpsear is an R package that automates preprocessing, outlier detection, statistical analysis, and visualization of qPCR raw data. Originally developed for outputs from Applied Biosystems qPCR instruments, it works directly with simple .xls matrices and can be applied to any qPCR dataset that follows this format.
+quickpcr is an R package that automates preprocessing, outlier detection, statistical analysis, and visualization of qPCR raw data. Originally developed for outputs from Applied Biosystems qPCR instruments, it works directly with simple .xls matrices and can be applied to any qPCR dataset that follows this format.
 
 ## Installation
 
 ```r
 # CRAN version
-install.packages("qpsear")
+install.packages("quickpcr")
 
 # Development version (GitHub)
-remotes::install_github("wez-97/qpsear")
+remotes::install_github("wez-97/quickpcr")
 ```
 ```r
 ### Quick Start
