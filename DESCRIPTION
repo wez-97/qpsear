@@ -2,10 +2,11 @@ Package: quickpcr
 Title: Statistical Expression Analysis of raw qpcr data in R
 Version: 0.0.0.9000
 Authors@R: 
-    person("Dongyoung", "Seo", , "dyseo97@postech.ac.kr", role = c("aut", "cre"),
+    person("Dongyoung", "Seo", email = "dyseo97@postech.ac.kr", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-7510-6799"))
 Description: Automated workflow for qPCR data cleaning, outlier removal, statistical analysis, and visualization.
-License: MIT
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
+Imports: dplyr, readxl, ggplot2, purrr, readr, tidyr

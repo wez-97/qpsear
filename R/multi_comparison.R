@@ -9,7 +9,12 @@
 #' @param stat_dir Directory for stat csv files
 #' @param plot_dir Directory for output plots
 #' @param outlier_dir Directory for outlier results
-#' @param ... (additional params)
+#' @param annotation_y_expand Numeric expansion factor for annotation y-positions (default: 1.2)
+#' @param plot_height Numeric plot height in inches (default: 5)
+#' @param annotation_base Numeric base offset for annotation placement (default: 0.08)
+#' @param annotation_step Numeric incremental step size for successive annotations (default: 0.08)
+#' @return Invisibly returns list of results or plots
+#' @export
 multi_comparison <- function(
     files,
     meta_cols,
@@ -29,7 +34,7 @@ multi_comparison <- function(
   ct_data <- load_and_preprocess_rawdata(files, meta_cols)
   ct_data_outlier <- check_outliers(ct_data, meta_cols, outlier_dir)
   wide <- remove_outliers_and_wide(ct_data_outlier, meta_cols)
-  
+
   purrr::walk(comparison_list, function(comp) {
     purrr::walk(target_groups, function(tg) {
       wide_clean <- calc_ct_values(wide, housekeeping, ref_sample, tg)

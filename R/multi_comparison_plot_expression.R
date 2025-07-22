@@ -7,7 +7,14 @@
 #' @param short_labels Short sample names for labeling
 #' @param plot_type 'all', 'by_target', or both
 #' @param file_prefix Filename prefix (e.g., comparison type)
-#' @param ... (etc)
+#' @param y_axis_max Numeric maximum value for the y-axis, or NULL to compute automatically
+#' @param annotation_y_expand Numeric expansion factor for annotation y-positions (default: 1.35)
+#' @param annotation_base Numeric base offset for annotation placement (default: 0.15)
+#' @param annotation_step Numeric incremental step size for successive annotations (default: 0.13)
+#' @param plot_height Numeric plot height in inches (default: 5)
+#' @param file_prefix Filename prefix for saved plot files (default: NULL)
+#' @return Invisibly returns ggplot objects
+#' @export
 multi_comparison_plot_expression <- function(
     rel_long_sel, stat_matrix, plot_dir, targets, short_labels,
     plot_type = c("all", "by_target"),
@@ -17,7 +24,7 @@ multi_comparison_plot_expression <- function(
 ) {
   rel_long_sel <- rel_long_sel %>%
     mutate(target = str_remove_all(target, "\\s*#2"))
-  
+
   # 1. Combined plot (all target genes)
   if ("all" %in% plot_type) {
     rel_long_sel_all <- rel_long_sel %>% filter(target %in% targets)

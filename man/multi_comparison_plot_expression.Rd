@@ -32,9 +32,20 @@ multi_comparison_plot_expression(
 
 \item{plot_type}{'all', 'by_target', or both}
 
-\item{file_prefix}{Filename prefix (e.g., comparison type)}
+\item{y_axis_max}{Numeric maximum value for the y-axis, or NULL to compute automatically}
 
-\item{...}{(etc)}
+\item{annotation_y_expand}{Numeric expansion factor for annotation y-positions (default: 1.35)}
+
+\item{annotation_base}{Numeric base offset for annotation placement (default: 0.15)}
+
+\item{annotation_step}{Numeric incremental step size for successive annotations (default: 0.13)}
+
+\item{plot_height}{Numeric plot height in inches (default: 5)}
+
+\item{file_prefix}{Filename prefix for saved plot files (default: NULL)}
+}
+\value{
+Invisibly returns ggplot objects
 }
 \description{
 Plot qPCR results (multi-comparison: all genes or by gene per cell type)

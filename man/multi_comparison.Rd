@@ -39,7 +39,16 @@ multi_comparison(
 
 \item{outlier_dir}{Directory for outlier results}
 
-\item{...}{(additional params)}
+\item{annotation_y_expand}{Numeric expansion factor for annotation y-positions (default: 1.2)}
+
+\item{plot_height}{Numeric plot height in inches (default: 5)}
+
+\item{annotation_base}{Numeric base offset for annotation placement (default: 0.08)}
+
+\item{annotation_step}{Numeric incremental step size for successive annotations (default: 0.08)}
+}
+\value{
+Invisibly returns list of results or plots
 }
 \description{
 Pipeline for multi-group qPCR comparison and plotting
