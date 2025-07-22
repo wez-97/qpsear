@@ -16,7 +16,7 @@ remotes::install_github("wez-97/quickpcr")
 ## 1. Export rawdata from Quantstudio™ Design & Anaylsis Software 
 If you do not use Applied Systems qpcr instrument, skip this step and go to step 1-1
 
-![alt text](image.tif)
+![alt text](image.tif)ads
 
 ## 1-1. Prepare matrix for quickpcr anaylsis 
 Generate the rawdata(metadata) matrix and name that sheet as "rawdata"
