@@ -1,0 +1,68 @@
+---
+title: "Using check_outliers"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Using check_outliers}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+    keep_md: true
+---
+
+# Overview
+
+The `check_outliers()` function takes a tidy qPCR data frame (from `load_and_preprocess_rawdata()`),  
+flags technical replicate Ct outliers when the maximum deviation exceeds 1 cycle,  
+writes a CSV file with the outlier flags, and generates a faceted PDF plot.  
+Optionally, it can return both the flagged data and the ggplot object.
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(readxl)
+library(ggplot2)
+```
+
+# Arguments
+
+- `ct_data`  
+  Data frame returned by `load_and_preprocess_rawdata()`.
+
+- `meta_cols`  
+  Character vector of metadata column names present in `ct_data`.
+
+- `outlier_dir`  
+  Directory path where the CSV and PDF will be saved.
+
+- `return_plot`  
+  Logical; if `TRUE`, returns a list with  
+    - `ct_data_outlier`: data frame including `is_outlier` flag  
+    - `outlier_plot`: a ggplot object
+
+# Basic Usage
+
+```r
+# 1) load & preprocess
+ct_data <- load_and_preprocess_rawdata(
+  files     = "data/run1.xlsx",
+  meta_cols = c("Cell Name", "Treatment", "Day", "experiment")
+)
+
+# 2) run outlier check and save files, return plot
+result <- check_outliers(
+  ct_data     = ct_data,
+  meta_cols   = c("Cell Name", "Treatment", "Day", "experiment"),
+  outlier_dir = "results",
+  return_plot = TRUE
+)
+
+# 3) inspect flagged data
+head(result$ct_data_outlier)
+
+# 4) display the outlier plot
+print(result$outlier_plot)
+```
+

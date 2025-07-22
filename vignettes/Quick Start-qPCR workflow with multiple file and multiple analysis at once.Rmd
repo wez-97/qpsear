@@ -1,0 +1,218 @@
+---
+title: "Quick Start: Multiple data analysis pipeline"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Quick Start: Multiple data analysis pipeline}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+  keep_md: true
+---
+  
+# Overview
+
+This vignette demonstrates a **complete qPCR analysis pipeline** using multiple Excel files (e.g., `test1.xlsx`, `test2.xlsx`, `test3.xlsx`), covering:  
+- Automated "rawdata" sheet extraction  
+- Outlier detection  
+- Time course and group-wise wide-format conversion  
+- Calculation of ΔCt, ΔΔCt, and relative expression  
+- Statistical testing (t-test, ANOVA+Tukey)  
+- High-quality plotting with group/time labeling
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(stringr)
+```
+
+# Step 1: Define File Paths and Preprocess Each File
+
+```r
+# Set working directory and rawdata file path
+my_path   <- "C:/Users/frodo/Desktop/qPCR_analysis"
+
+# File paths to multiple Excel files
+files <- file.path(my_path, "rawdata", c("test1.xlsx", "test2.xlsx","test3.xlsx"))
+
+# If necessary, first generate "rawdata" sheet for each file (run once per file)
+for (fp in files) {
+  create_rawdata_sheet(
+    file_path      = fp,
+    sheet_name     = "Results",   # Change if different
+    skip           = 43,
+    new_sheet_name = "rawdata"
+  )
+}
+```
+
+# Step 2: Combine and Tidy All Raw Data
+
+```r
+qc_all <- load_and_preprocess_rawdata(
+  files     = files,
+  meta_cols = c("Cell Name", "Treatment", "Day", "experiment")
+)
+head(qc_all)
+```
+
+# Step 3: Detect Outliers
+
+```r
+check_outliers(
+  ct_data     = qc_all,
+  meta_cols   = c("Cell Name", "Treatment", "Day", "experiment"),
+  outlier_dir = "results",
+  return_plot = TRUE
+)
+```
+
+# Step 4: Wide-format Pivot (Gene-wise Columns)
+
+```r
+wide_qpcr <- qc_all %>%
+  filter(!is.na(target)) %>%
+  tidyr::pivot_wider(
+    id_cols    = c(sample, `Cell Name`, Treatment, Day, experiment),
+    names_from = target,
+    values_from = ct
+  )
+```
+
+# Step 5: ΔCt, ΔΔCt, Relative Expression Calculation
+
+```r
+housekeeping <- "GAPDH"
+ref_sample   <- "pADSC No.1_None_D0"   # Use your true reference sample name
+target_genes <- c("FABP4", "LEPTIN", "UCP3")
+
+wide_with_exp <- calc_ct_values(
+  wide          = wide_qpcr,
+  housekeeping  = housekeeping,
+  ref_sample    = ref_sample,
+  target_genes  = target_genes
+)
+```
+
+# Step 6: Long-format Transformation
+
+```r
+meta_cols_full <- c("sample", "Cell Name", "Treatment", "Day", "experiment")
+
+long_list <- to_long_format(wide_with_exp, meta_cols_full)
+rel_long  <- long_list$rel_long
+dct_long  <- long_list$dct_long
+
+# log2 transformation for plotting
+rel_long <- rel_long %>% mutate(log2_rel_exp = log2(rel_exp))
+```
+
+# Step 7: Statistical Testing
+
+## 7.1 t-test Example (e.g., same time point but different treatment)
+
+```r
+sample_names_ttest <- c("pADSC No.1_None_D0", 
+                        "pADSC No.1_Rosiglitazone_D21", 
+                        "pADSC No.1_5,7-DMF_D21")
+
+stat_ttest <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names_ttest),
+  stat_method  = "ttest",
+  sample_names = sample_names_ttest,
+  stat_dir     = "results"
+)
+```
+
+## 7.2 ANOVA (e.g., time course sample: D0, D7, D14, D21)
+
+```r
+sample_names_anova <- c("pADSC No.1_None_D0", 
+                        "pADSC No.1_5,7-DMF_D7", 
+                        "pADSC No.1_5,7-DMF_D14", 
+                        "pADSC No.1_5,7-DMF_D21")
+
+stat_anova <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names_anova),
+  stat_method  = "anova",
+  sample_names = sample_names_anova,
+  stat_dir     = "results"
+)
+```
+
+# Step 8: Step 8: Custom Axis Label Mapping for Publication or Presentation
+
+```r
+x_labels_map_ttest <- c(
+  "pADSC No.1_None_D0"           = "D0",
+  "pADSC No.1_Rosiglitazone_D21" = "Rosi D21",
+  "pADSC No.1_5,7-DMF_D21"       = "5,7-DMF D21"
+)
+
+x_labels_map_anova <- c(
+  "pADSC No.1_None_D0"     = "D0",
+  "pADSC No.1_5,7-DMF_D7"  = "DMF D7",
+  "pADSC No.1_5,7-DMF_D14" = "DMF D14",
+  "pADSC No.1_5,7-DMF_D21" = "DMF D21"
+)
+```
+
+# Step 9: Visualization
+
+## 9.1 t-test Plot
+
+```r
+targets_ttest <- c("FABP4", "LEPTIN", "UCP3")
+plot_dir_ttest <- "plots"
+
+multi_comparison_plot_expression(
+  rel_long_sel = rel_long %>% filter(sample %in% names(x_labels_map_ttest), target %in% targets_ttest),
+  stat_matrix  = stat_ttest,
+  plot_dir     = plot_dir_ttest,
+  targets      = targets_ttest,
+  show_legend  = FALSE,
+  x_labels_map = x_labels_map_ttest,
+  x_angle      = 45,
+  x_hjust      = 1,
+  plot_type    = c("all", "by_target"),
+  file_prefix  = "ttest"
+)
+```
+
+## 9.2 ANOVA Plot
+
+```r
+targets_anova <- c("FABP4", "LEPTIN", "UCP3")
+plot_dir_anova <- "plots"
+
+multi_comparison_plot_expression(
+  rel_long_sel = rel_long %>% filter(sample %in% names(x_labels_map_anova), target %in% targets_anova),
+  stat_matrix  = stat_anova,
+  plot_dir     = plot_dir_anova,
+  targets      = targets_anova,
+  show_legend  = FALSE,
+  x_labels_map = x_labels_map_anova,
+  x_angle      = 45,
+  x_hjust      = 1,
+  plot_type    = c("all", "by_target"),
+  file_prefix  = "anova"
+)
+```
+
+# Output
+
+- All result `.csv` files (outlier, stats) saved to your `"results"` folder.
+- All publication-quality `.tiff` plots are saved to your `"plots"` folder.
+
+---
+
+**Note:**
+
+- All sample names, gene names, etc., must exactly match your Excel and processed data.
+- The pipeline can be adapted to any number of genes, samples, or time points.

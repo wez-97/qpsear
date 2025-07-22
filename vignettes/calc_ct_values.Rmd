@@ -1,0 +1,81 @@
+---
+  title: "Calculating ΔCt, ΔΔCt, and Relative Expression"
+author: "quickpcr Team"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+ %\VignetteIndexEntry{Calculating Ct Values}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+  keep_md: true
+---
+  
+# Overview
+  
+This vignette demonstrates how to calculate ΔCt, ΔΔCt, and relative expression values  
+using qPCR data processed with `quickpcr`.  
+You will learn how to transform long-form data into wide-form,  
+then compute normalized and relative quantification for your genes of interest.
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(dplyr)
+library(tidyr)
+```
+
+# Arguments
+
+- `wide`  
+  Wide-format data frame, typically generated from long-form qPCR data using `pivot_wider`.
+
+- `housekeeping`  
+  String. Name of the housekeeping gene column (e.g., `"GAPDH", "18S`).
+
+- `ref_sample`  
+  String. The value in the `sample` column to be used as the reference sample.
+
+- `target_genes`  
+  Character vector of gene columns to compute ΔCt, ΔΔCt, and relative expression.
+
+# Basic Usage
+
+```r
+# 1. Remove any NA targets before wide-format conversion
+qc1_clean <- qc1 %>% dplyr::filter(!is.na(target))
+
+# 2. Convert to wide format
+wide_qpcr <- qc1_clean %>%
+  tidyr::pivot_wider(
+    id_cols    = c(sample, `Cell Name`, Treatment, Day, experiment),
+    names_from = target,
+    values_from = ct
+  )
+
+# 3. Calculate expression metrics
+housekeeping  <- "GAPDH"
+ref_sample    <- "No.4_None_D0"  # Replace with your actual reference sample
+target_genes  <- c("FABP4", "LEPTIN", "UCP1") # Add all target genes you want
+
+wide_with_exp <- calc_ct_values(
+  wide          = wide_qpcr,
+  housekeeping  = housekeeping,
+  ref_sample    = ref_sample,
+  target_genes  = target_genes
+)
+```
+
+# Returned Result
+
+The returned data frame contains:
+
+- All original columns (e.g., `sample`, `Cell Name`, `Treatment`, etc.)
+- One column per gene (e.g., `FABP4`, `GAPDH`, ...)
+- For each `target_genes`, the following new columns:
+    - `delta_ct_{gene}`: ΔCt value (gene - housekeeping)
+    - `delta_dct_{gene}`: ΔΔCt value, normalized to the reference sample
+    - `rel_exp_{gene}`: Relative expression, calculated as 2^-ΔΔCt
+
+You can use this data for plotting, statistical analysis, or reporting gene expression changes.

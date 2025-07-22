@@ -1,0 +1,99 @@
+---
+title: "Using create_rawdata_sheet"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Using create_rawdata_sheet}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+    keep_md: true
+---
+
+# Overview
+
+The `create_rawdata_sheet()` function reads a qPCR result workbook (`.xlsx`), extracts the key columns  
+(`Sample Name`, `Target Name`, `CT`), splits the sample identifiers into metadata (`Cell Name`, `Treatment`, `Day`),  
+assigns an `experiment` index for replicates, and then writes a new sheet (by default named `rawdata`) back into the file.
+
+# Prerequisites
+
+```r
+library(quickpcr)   # contains create_rawdata_sheet()
+library(readxl)     # for reading Excel sheets
+library(writexl)    # for writing Excel workbooks
+library(dplyr)      # for data manipulation
+library(tidyr)      # for splitting the sample name
+```
+
+# Arguments
+
+- `file_path`  
+  Path to the input `.xlsx` file.
+
+- `sheet_name`  
+  Name of the sheet in `file_path` containing the raw qPCR data (default: `"Results"`).
+
+- `skip`  
+  Number of rows to skip before the header row (default: `43` so that row 44 becomes the column names).
+
+- `new_sheet_name`  
+  Name of the sheet to create (default: `"rawdata"`).
+
+- `sep_pattern`  
+  Pattern used to split `Sample Name` into `Cell Name`, `Treatment`, and `Day` (default: `"_`).
+
+- `output_path`  
+  Path where the modified workbook will be saved (default: overwrites `file_path`).
+
+# Basic Usage
+
+```r
+# Create the rawdata sheet in-place, overwriting the original file
+create_rawdata_sheet(
+  file_path      = "data/my_results.xlsx",
+  sheet_name     = "Results",
+  skip           = 43,
+  new_sheet_name = "rawdata"
+)
+```
+
+# Example: Create rawdata(metadata) sheet from .xlsx file
+
+```r
+# set base analysis directory
+my_path <- "C:/Users/frodo/Desktop/qPCR_analysis"
+
+# construct full path to the test.xlsx file in the rawdata subfolder
+file_path <- file.path(my_path, "rawdata", "test.xlsx")
+
+# sheet name in the workbook
+sheet_name <- "Results"
+
+# create the rawdata sheet
+create_rawdata_sheet(
+  file_path      = file_path,
+  sheet_name     = sheet_name,
+  skip           = 43,
+  new_sheet_name = "rawdata"
+)
+
+# verify the first rows of the new sheet
+readxl::read_excel(file_path, sheet = "rawdata") |> head()
+```
+
+# Returned Sheet
+
+After execution, the workbook at `output_path` will contain a new sheet named `"rawdata"` with columns:
+
+- `Sample Name` (original sample identifier)
+- `Target Name`
+- `CT`
+- `Cell Name` (parsed from `Sample Name`)
+- `Treatment` (parsed from `Sample Name`)
+- `Day` (parsed from `Sample Name`)
+- `experiment` (replicate index: `a`, `b`, `c`, …)
+
+You can now use this standardized metadata sheet for downstream qPCR analysis workflows.
+

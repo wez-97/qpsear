@@ -9,4 +9,5 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
-Imports: dplyr, readxl, ggplot2, purrr, readr, tidyr
+Imports: readxl, writexl, stringr, purrr, readr, dplyr, tidyr, ggplot2
+Suggests: xlsx

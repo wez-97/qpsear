@@ -1,0 +1,67 @@
+---
+title: "Using load_and_preprocess_rawdata"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Using load_and_preprocess_rawdata}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+    keep_md: true
+---
+
+# Overview
+
+The `load_and_preprocess_rawdata()` function reads one or more qPCR result files (Excel `.xlsx`)  
+that contain a `rawdata` sheet, and returns a single tidy data frame. It performs the following steps:
+
+- rename `Sample Name` → `sample`, `Target Name` → `target`, `CT` → `ct`
+- convert `"Undetermined"` to 40 and coerce other CT values to numeric
+- preserve `experiment` as character
+- include any additional metadata columns specified in `meta_cols`
+- sort the final data by `sample`, `target`, and `experiment`
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(readxl)
+```
+# Arguments
+
+- `files`  
+  Character vector of one or more file paths to `.xlsx` workbooks.
+
+- `meta_cols`  
+  Character vector of column names in the `rawdata` sheet that should be retained  
+  (for example, `"Cell Name"`, `"Treatment"`, `"Day"`, `"experiment"`).
+
+# Basic Usage
+
+```r
+# single file example
+qc1 <- load_and_preprocess_rawdata(
+  files     = "data/run1.xlsx",
+  meta_cols = c("Cell Name", "Treatment", "Day", "experiment")
+)
+head(qc1)
+```
+
+```r
+# multiple files example
+qc_all <- load_and_preprocess_rawdata(
+  files = list.files("data/", pattern = "\\.xlsx$", full.names = TRUE),
+  meta_cols = c("Cell Name", "Treatment", "Day", "experiment")
+)
+```
+# Returned Data Frame
+
+The returned tibble has columns:
+
+- `sample` (character)
+- `target` (character)
+- `ct` (double)
+- any `meta_cols` you requested, e.g. `Cell Name`, `Treatment`, `Day`, `experiment`
+
+You can now feed this tidy data directly into downstream analysis workflows.

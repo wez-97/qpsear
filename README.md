@@ -11,18 +11,17 @@ install.packages("quickpcr")
 # Development version (GitHub)
 remotes::install_github("wez-97/quickpcr")
 ```
-```r
-### Quick Start
+# Quick Start
 
-# 0. Export rawdata from Quantstudio™ Design & Anaylsis Software 
-# If you do not use Applied Systems qpcr instrument, skip this step.
-```
+## 1. Export rawdata from Quantstudio™ Design & Anaylsis Software 
+If you do not use Applied Systems qpcr instrument, skip this step and go to step 1-1
+
 ![alt text](image.png)
-```r
-# 0. Prepare matrix for qpsear anaylsis 
-# Generate the rawdata matrix and name that sheet as "rawdata"
-# **Warning:** Column names must match exactly as shown, including capitalization and spaces.
-```
-![alt text](image-1.png)
-![alt text](image-2.png)
+
+## 1-1. Prepare matrix for quickpcr anaylsis 
+Generate the rawdata(metadata) matrix and name that sheet as "rawdata"
+- `Warining`: Column names must match exactly as shown, including capitalization and spaces.
+- `Warning`: The sample name must follow the format "{Cell Name}_{Treatment}_{Day}". quickpcr will automatically generate four new columns — Cell Name, Treatment, Day, and experiment — based on the sample name.
+
+
 

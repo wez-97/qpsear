@@ -3,6 +3,7 @@
 #' @param wide_clean Output of calc_ct_values()
 #' @param meta_cols_full Vector of meta-data column names to keep
 #' @return List with $rel_long and $dct_long (both long-format tibbles)
+#' @export
 to_long_format <- function(wide_clean, meta_cols_full) {
   rel_long <- wide_clean %>%
     select(all_of(meta_cols_full), starts_with("rel_exp_")) %>%
@@ -13,7 +14,7 @@ to_long_format <- function(wide_clean, meta_cols_full) {
       values_to = "rel_exp"
     ) %>%
     filter(!is.na(rel_exp))
-  
+
   dct_long <- wide_clean %>%
     select(all_of(meta_cols_full), starts_with("delta_ct_")) %>%
     pivot_longer(
@@ -23,6 +24,6 @@ to_long_format <- function(wide_clean, meta_cols_full) {
       values_to = "delta_ct"
     ) %>%
     filter(!is.na(delta_ct))
-  
+
   list(rel_long = rel_long, dct_long = dct_long)
 }

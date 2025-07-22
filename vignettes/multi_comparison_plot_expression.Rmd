@@ -1,0 +1,115 @@
+---
+title: "Using multi_comparison_plot_expression"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Using multi_comparison_plot_expression}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+  keep_md: true
+---
+
+# Overview
+
+The `multi_comparison_plot_expression()` function visualizes relative qPCR expression data (log2 scale)  
+for multiple genes and sample groups, using either combined or gene-wise (by target) plots.  
+It supports flexible legend display, x-axis label mapping/rotation, and publication-ready TIFF output.
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(ggplot2)
+library(dplyr)
+```
+# Arguments
+
+- `rel_long_sel`  
+  Long-format tibble of relative expression, typically from `to_long_format()$rel_long`.
+
+- `stat_matrix`  
+  Output data frame from `analyze_statistics()`, containing statistical results (optionally with `p.adj.signif`).
+
+- `plot_dir`  
+  Output directory to save plots (created if not exists).
+
+- `targets`  
+  Character vector of target gene(s) to plot.
+
+- `show_legend`  
+  Logical; whether to display the plot legend (`TRUE` by default).
+
+- `x_labels_map`  
+  *Optional.* Named character vector for remapping sample names on the x-axis  
+  (e.g., `c("No.4_None_D0"="Ctrl", "No.4_Ins5-BMP10_D21"="Exp1")`).
+
+- `x_angle`, `x_hjust`, `x_vjust`  
+  *Optional.* Control the angle (`x_angle`, default 45), horizontal (`x_hjust`), and vertical (`x_vjust`) justification of x-axis labels.
+
+- `plot_type`  
+  `"all"` for combined plot, `"by_target"` for gene-wise, or both.
+
+- `file_prefix`  
+  (Optional) Prefix for plot file names.
+
+- `y_axis_max`, `annotation_y_expand`, `annotation_base`, `annotation_step`, `plot_height`  
+  (Optional) Plot scaling and annotation control parameters.
+
+# Basic Usage
+
+```r
+# Example: visualize three target genes for selected groups, with custom x-labels and legend hidden
+multi_comparison_plot_expression(
+  rel_long_sel = rel_long %>% filter(sample %in% sample_names, target %in% c("FABP4", "LEPTIN", "UCP1")),
+  stat_matrix  = stat_matrix,
+  plot_dir     = "plots",
+  targets      = c("FABP4", "LEPTIN", "UCP1"),
+  show_legend  = FALSE,
+  x_labels_map = c("No.4_None_D0"="Ctrl", "No.4_Ins5-BMP10_D21"="Exp1", "No.4_Ins2.5-BMP1_D21"="Exp2"),
+  x_angle      = 45,
+  x_hjust      = 1,
+  plot_type    = c("all", "by_target"),
+  file_prefix  = "exp_comparison"
+)
+```
+
+# Example
+
+Suppose you have already processed qPCR data up to the rel_long step and performed statistics:
+
+```r
+rel_long_sel <- rel_long %>% filter(sample %in% sample_names)
+stat_matrix <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names),
+  stat_method  = "anova",
+  sample_names = sample_names,
+  stat_dir     = "results"
+)
+multi_comparison_plot_expression(
+  rel_long_sel = rel_long_sel,
+  stat_matrix  = stat_matrix,
+  plot_dir     = "plots",
+  targets      = c("FABP4", "LEPTIN", "UCP1"),
+  show_legend  = TRUE,
+  x_labels_map = c("No.4_None_D0"="Ctrl", "No.4_Ins5-BMP10_D21"="Exp1", "No.4_Ins2.5-BMP1_D21"="Exp2"),
+  x_angle      = 45,
+  x_hjust      = 1,
+  plot_type    = c("all", "by_target"),
+  file_prefix  = "exp_comparison"
+)
+```
+
+# Returned Results
+
+- Saves one or more `.tiff` files in `plot_dir`,  
+  named according to `file_prefix`, `Cell Name`, and `target`.
+
+- Invisibly returns the last created `ggplot` object(s) for further customization if needed.
+
+- Output directory and file creation status are printed for debugging.
+
+You can use the output plots directly in publications, presentations, or supplementary files.
+
+

@@ -9,7 +9,11 @@ multi_comparison_plot_expression(
   stat_matrix,
   plot_dir,
   targets,
-  short_labels,
+  show_legend = TRUE,
+  x_labels_map = NULL,
+  x_angle = 45,
+  x_hjust = 1,
+  x_vjust = 1,
   plot_type = c("all", "by_target"),
   y_axis_max = NULL,
   annotation_y_expand = 1.35,
@@ -28,7 +32,15 @@ multi_comparison_plot_expression(
 
 \item{targets}{Character vector of target gene(s) for this comparison}
 
-\item{short_labels}{Short sample names for labeling}
+\item{show_legend}{Logical. 범례 표시 여부 (default: TRUE)}
+
+\item{x_labels_map}{Named character vector, x축 sample명을 다른 이름으로 표시하고 싶을 때 사용. 예) c("No.4_None_D0"="Ctrl", ...)}
+
+\item{x_angle}{x축 레이블 각도 (default: 45)}
+
+\item{x_hjust}{x축 레이블 hjust (default: 1)}
+
+\item{x_vjust}{x축 레이블 vjust (default: 1)}
 
 \item{plot_type}{'all', 'by_target', or both}
 
@@ -42,7 +54,7 @@ multi_comparison_plot_expression(
 
 \item{plot_height}{Numeric plot height in inches (default: 5)}
 
-\item{file_prefix}{Filename prefix for saved plot files (default: NULL)}
+\item{file_prefix}{Filename prefix (e.g., comparison type)}
 }
 \value{
 Invisibly returns ggplot objects

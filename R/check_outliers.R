@@ -7,6 +7,15 @@
 #' @return Data.frame with outlier flag or list (data + plot)
 #' @export
 check_outliers <- function(ct_data, meta_cols, outlier_dir, return_plot = FALSE) {
+  # Debugging: print out the output directory info
+  cat("[INFO] Requested output directory:", outlier_dir, "\n")
+  dir_created <- dir.create(outlier_dir, showWarnings = FALSE, recursive = TRUE)
+  cat("[INFO] dir.create result:", dir_created, "; file.exists:", file.exists(outlier_dir), "\n")
+
+  if (!file.exists(outlier_dir)) {
+    stop("Output directory could not be created: ", outlier_dir)
+  }
+
   ct_data_outlier <- ct_data %>%
     dplyr::group_by(sample, target) %>%
     dplyr::mutate(
@@ -23,7 +32,7 @@ check_outliers <- function(ct_data, meta_cols, outlier_dir, return_plot = FALSE)
     ) %>%
     dplyr::ungroup()
   readr::write_csv(ct_data_outlier, file.path(outlier_dir, "ct_outlier_flag.csv"))
-  
+
   n_outlier <- sum(ct_data_outlier$is_outlier, na.rm = TRUE)
   n_total <- nrow(ct_data_outlier)
   if (n_outlier > 0) {
@@ -31,7 +40,7 @@ check_outliers <- function(ct_data, meta_cols, outlier_dir, return_plot = FALSE)
   } else {
     cat("[INFO] No outliers detected. Great job!\n")
   }
-  
+
   p_out <- NULL
   if (any(ct_data_outlier$is_outlier)) {
     outlier_groups <- ct_data_outlier %>%

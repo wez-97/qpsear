@@ -1,0 +1,103 @@
+---
+title: "Statistical Analysis of qPCR Data: t-test and ANOVA+Tukey"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Statistical Analysis of qPCR Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+  keep_md: true
+---
+
+# Overview
+
+The `analyze_statistics()` function performs group-wise statistical analysis (t-test or ANOVA+TukeyHSD)  
+on delta Ct values from qPCR experiments. It outputs pairwise comparison results and includes a  
+significance label (`p.adj.signif`) using standard asterisk/star notation.
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(rstatix)
+```
+
+# Arguments
+
+- `dct_long_sel`  
+  Long-format tibble containing delta Ct values (output of `to_long_format()`, `$dct_long`).
+
+- `stat_method`  
+  String: `"ttest"` for pairwise t-test, `"anova"` for ANOVA + TukeyHSD.
+
+- `sample_names`  
+  Character vector: exact sample names (as in the `sample` column) to compare.  
+  (e.g., `c("No.4_None_D0", "No.4_Ins5-BMP10_D21")`)
+
+- `stat_dir`  
+  Output directory for csv results.
+
+# Basic Usage
+
+```r
+# Suppose dct_long is already prepared (see previous steps)
+# Example: Pairwise t-test for two groups
+
+sample_names <- c("No.4_None_D0", "No.4_Ins5-BMP10_D21")
+
+stat_result_ttest <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names),
+  stat_method  = "ttest",
+  sample_names = sample_names,
+  stat_dir     = "results"
+)
+```
+
+```
+# Example: ANOVA + TukeyHSD for three groups
+
+sample_names <- c("No.4_None_D0", "No.4_Ins5-BMP10_D21", "No.4_Ins2.5-BMP1_D21")
+
+stat_result_anova <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names),
+  stat_method  = "anova",
+  sample_names = sample_names,
+  stat_dir     = "results"
+)
+```
+
+# Example
+
+```r
+# Run ANOVA+TukeyHSD for all groups in dct_long
+all_groups <- unique(dct_long$sample)
+
+stat_result <- analyze_statistics(
+  dct_long_sel = dct_long,
+  stat_method  = "anova",
+  sample_names = all_groups,
+  stat_dir     = "results"
+)
+
+# Check the output
+head(stat_result)
+readr::read_csv(file.path("results", "anova_tukey.csv"))
+```
+
+# Returned Results
+
+- The function returns a tibble with group-wise comparison results, including:
+    - `group1`, `group2` (compared samples)
+    - `diff` (mean difference), `lwr`/`upr` (confidence interval), `p.adj` (adjusted p-value)
+    - `p.adj.signif` (significance symbol: `"***"`, `"**"`, `"*"`, `"."`, `"ns"`)
+- The results are also saved as CSV files in `stat_dir`:
+    - `"ttest_matrix.csv"` for t-test results
+    - `"anova_tukey.csv"` for ANOVA+TukeyHSD results
+
+You can use the `p.adj.signif` column directly for publication-quality figures or reporting.
+

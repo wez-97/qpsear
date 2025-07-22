@@ -4,7 +4,8 @@
 #' @param meta_cols Character vector, names of metadata columns.
 #' @return A data.frame of tidy qPCR data.
 #' @importFrom readxl read_excel
-#' @importFrom dplyr %>% rename mutate arrange
+#' @importFrom purrr map_dfr
+#' @importFrom dplyr rename mutate select arrange
 #' @export
 load_and_preprocess_rawdata <- function(files, meta_cols) {
   raw <- purrr::map_dfr(files, function(fp) {
@@ -13,12 +14,21 @@ load_and_preprocess_rawdata <- function(files, meta_cols) {
     stopifnot(all(req_cols %in% colnames(dat)))
     dat
   })
-  ct_data <- raw %>%
-    dplyr::rename(sample = `Sample Name`, target = `Target Name`, ct = CT) %>%
+
+  # CT 컬럼을 문자로 가져온 뒤, 숫자로 바꿀 때 경고 억제
+  raw <- raw %>%
+    dplyr::rename(
+      sample = `Sample Name`,
+      target = `Target Name`,
+      ct_str = CT
+    ) %>%
     dplyr::mutate(
-      ct = ifelse(ct == "Undetermined", 40, as.numeric(ct)),
+      numeric_ct = suppressWarnings(as.numeric(ct_str)),
+      ct = ifelse(ct_str == "Undetermined", 40, numeric_ct),
       experiment = as.character(experiment)
     ) %>%
+    dplyr::select(-ct_str, -numeric_ct) %>%
     dplyr::arrange(sample, target, experiment)
-  ct_data
+
+  raw
 }

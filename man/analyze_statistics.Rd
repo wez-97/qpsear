@@ -4,14 +4,14 @@
 \alias{analyze_statistics}
 \title{Perform group-wise t-test or ANOVA+TukeyHSD for qPCR}
 \usage{
-analyze_statistics(dct_long_sel, stat_method, short_labels, stat_dir)
+analyze_statistics(dct_long_sel, stat_method, sample_names, stat_dir)
 }
 \arguments{
 \item{dct_long_sel}{Long-format data (delta_ct)}
 
 \item{stat_method}{'ttest' or 'anova'}
 
-\item{short_labels}{Sample names for comparison}
+\item{sample_names}{Character vector: exact sample names (as in sample column) to compare}
 
 \item{stat_dir}{Output directory for csv results}
 }

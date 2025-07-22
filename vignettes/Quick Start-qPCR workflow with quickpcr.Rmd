@@ -1,0 +1,178 @@
+---
+title: "Quick Start: qPCR Workflow with quickpcr"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Quick Start: qPCR Workflow with quickpcr}
+%\VignetteEngine{knitr::rmarkdown}
+%\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+  keep_md: true
+---
+  
+# Overview
+  
+This quick start guide demonstrates the full qPCR data analysis workflow  
+using the `quickpcr` package—from raw Excel file to statistical plots—  
+including data import, outlier detection, normalization, statistics, and visualization.
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
+```
+
+# 1. Prepare and Import Raw Data
+
+```r
+# Set working directory and rawdata file path
+my_path   <- "C:/Users/frodo/Desktop/qPCR_analysis"
+file_path <- file.path(my_path, "rawdata", "test.xlsx") # 혹은
+file_path <- "C:/Users/frodo/Desktop/qPCR_analysis/rawdata/test.xlsx" # 이렇게도 설정 가능
+
+sheet_name <- "Results"
+
+# Create a standardized 'rawdata' sheet for analysis
+create_rawdata_sheet(
+  file_path      = file_path,
+  sheet_name     = sheet_name,
+  skip           = 43,
+  new_sheet_name = "rawdata"
+)
+
+# Check the output
+readxl::read_excel(file_path, sheet = "rawdata") |> head()
+```
+
+# 2. Load and Preprocess
+
+```r
+qc1 <- load_and_preprocess_rawdata(
+  files     = file_path,
+  meta_cols = c("Cell Name", "Treatment", "Day", "experiment")
+)
+head(qc1)
+```
+
+# 3. Outlier Detection (QC)
+
+```r
+result <- check_outliers(
+  ct_data     = qc1,
+  meta_cols   = c("Cell Name", "Treatment", "Day", "experiment"),
+  outlier_dir = "results",
+  return_plot = TRUE
+)
+```
+
+# 4. Wide-format Conversion (for ΔCt Calculation)
+
+```r
+wide_qpcr <- qc1 %>%
+  filter(!is.na(target)) %>%
+  pivot_wider(
+    id_cols    = c(sample, `Cell Name`, Treatment, Day, experiment),
+    names_from = target,
+    values_from = ct
+  )
+```
+
+# 5. ΔCt, ΔΔCt, and Relative Expression Caculation
+
+```r
+housekeeping <- "GAPDH" 
+ref_sample   <- "No.4_None_D0"
+target_genes <- c("FABP4", "LEPTIN", "UCP1")
+
+wide_with_exp <- calc_ct_values(
+  wide          = wide_qpcr,
+  housekeeping  = housekeeping,
+  ref_sample    = ref_sample,
+  target_genes  = target_genes
+)
+
+head(wide_with_exp)
+```
+
+# 6. Long-format Transformation
+
+```r
+meta_cols_full <- c("sample", "Cell Name", "Treatment", "Day", "experiment")
+long_list <- to_long_format(wide_with_exp, meta_cols_full)
+rel_long  <- long_list$rel_long
+dct_long  <- long_list$dct_long
+
+head(rel_long)
+head(dct_long)
+```
+
+# 7. Statistical Comparison (t-test or ANOVA + TukeyHSD)
+
+## t-test (pairwise comparison)
+
+```r
+sample_names <- c("No.4_None_D0", "No.4_Ins5-BMP10_D21")
+
+stat_result <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names),
+  stat_method  = "ttest",
+  sample_names = sample_names,
+  stat_dir     = "results"
+)
+```
+
+## ANOVA + TukeyHSD (multiple groups)
+
+```r
+sample_names <- c("No.4_None_D0", "No.4_Ins5-BMP10_D21", "No.4_Ins2.5-BMP1_D21")
+
+stat_result <- analyze_statistics(
+  dct_long_sel = dct_long %>% filter(sample %in% sample_names),
+  stat_method  = "anova",
+  sample_names = sample_names,
+  stat_dir     = "results"
+)
+```
+
+8. Visualization: Plot Expression and Significance
+
+```r
+# Add log2(Relative Expression) for plotting
+rel_long <- rel_long %>%
+  mutate(log2_rel_exp = log2(rel_exp))
+
+# Set targets and x-axis label mapping
+targets      <- c("FABP4", "LEPTIN", "UCP1")
+plot_dir     <- "plots"
+short_labels <- sample_names
+x_labels_map <- c(
+  "No.4_None_D0"        = "Ctrl",
+  "No.4_Ins5-BMP10_D21" = "Exp1",
+  "No.4_Ins2.5-BMP1_D21"= "Exp2"
+)
+
+multi_comparison_plot_expression(
+  rel_long_sel = rel_long %>% filter(sample %in% sample_names, target %in% targets),
+  stat_matrix  = stat_result,
+  plot_dir     = plot_dir,
+  targets      = targets,
+  show_legend  = FALSE,
+  x_labels_map = x_labels_map,
+  x_angle      = 45,
+  x_hjust      = 1,
+  plot_type    = c("all", "by_target"),
+  file_prefix  = "FABP4_vs_LEPTIN_vs_UCP1"
+)
+```
+
+# Returned Results
+
+- Analysis results (tables, plots) are saved in `results` and `plots` directories.
+- Plots are ready for publication or presentation.
+- Functions invisibly return processed data/plots for further use in downstream R scripts.

@@ -1,0 +1,52 @@
+---
+title: "Converting qPCR Data to Long Format"
+author: "Dongyoung Seo"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+vignette: >
+  %\VignetteIndexEntry{Converting to Long Format}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+output:
+  rmarkdown::html_vignette:
+    keep_md: true
+---
+
+# Overview
+
+Convert wide-format qPCR data (one column per gene) to long-format data for plotting and statistical analysis.
+
+# Prerequisites
+
+```r
+library(quickpcr)
+library(dplyr)
+library(tidyr)
+```
+
+# Arguments
+
+- `wide_clean`  
+  Wide-format data frame, output of `calc_ct_values()`.
+
+- `meta_cols_full`  
+  Character vector of metadata column names to keep in the output.
+
+# Basic Usage
+
+```r
+meta_cols_full <- c("sample", "Cell Name", "Treatment", "Day", "experiment")
+
+long_list <- to_long_format(wide_clean, meta_cols_full)
+rel_long  <- long_list$rel_long   # long-format relative expression
+dct_long  <- long_list$dct_long   # long-format delta Ct
+```
+
+# Returned Result
+
+Returns a list with:
+
+- `$rel_long`: long-format tibble with columns `meta_cols_full`, `target`, `rel_exp`
+- `$dct_long`: long-format tibble with columns `meta_cols_full`, `target`, `delta_ct`
+
+Use these for visualization and statistical comparisons between groups or conditions.
+

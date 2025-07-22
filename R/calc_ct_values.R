@@ -5,6 +5,7 @@
 #' @param ref_sample Reference sample name (string)
 #' @param target_genes Vector of target gene names
 #' @return Data.frame with added columns for delta_ct, delta_dct, rel_exp for each gene
+#' @export
 calc_ct_values <- function(wide, housekeeping, ref_sample, target_genes) {
   wide_clean <- wide %>% filter(!is.na(!!sym(housekeeping)))
   for (gene in target_genes) {
